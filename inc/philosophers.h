@@ -58,4 +58,5 @@ bool    init_table(int ac, char **av, t_table *table);
 
 
 int	ft_atoi(const char *str);
+uint64_t	ft_time_ms(void);
 #endif

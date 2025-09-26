@@ -38,3 +38,10 @@ int	ft_atoi(const char *str)
 	}
 	return (res * neg);
 }
+uint64_t	ft_time_ms(void)
+{
+	struct timeval	time;
+
+	gettimeofday(&time, NULL);
+	return (time.tv_sec * 1000 + time.tv_usec / 1000);
+}
