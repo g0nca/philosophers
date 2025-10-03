@@ -21,7 +21,7 @@ int main(int ac, char **av)
 
     if (check_args(ac, av, &table) == true)
         return (false);
-    printf("NBR:%d\n", table.n_philos);
+    
     return (0);
 }
 bool     check_args(int ac, char **av, t_table *table)
