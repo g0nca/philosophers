@@ -6,11 +6,19 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 14:51:06 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/09/26 16:01:52 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/10 13:51:35 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/philosophers.h"
+
+// Limites: Numero de fisolofos nao pode ser menor que 1 e maior que 200
+// Tempo para morrer nao pode ser menor que 60 e maior que o INT_MAX
+// Tempo para comer nao pode ser menor que 60 e maior que o INT_MAX
+// Quantas vezes eles precisam de comer tambem nao pode ser menor que -1 e maior que o INT_MAX
+//
+static bool    check_limits(t_table *table);
+static void philos_start(t_table *table);
 
 bool    init_table(int ac, char **av, t_table *table)
 {
@@ -26,5 +34,37 @@ bool    init_table(int ac, char **av, t_table *table)
         table->max_rounds = ft_atoi(av[5]);
     else
         table->max_rounds = -1;
+    if (check_limits(table) == true)
+        return (true);
+    philos_start(table);
+    return (false);
+}
+static void philos_start(t_table *table)
+{
+    int i;
+
+    i = 0;
+    while (i < table->n_philos)
+    {
+        table->philo[i].philo_nbr = i + 1;
+        table->philo[i].last_meal = table->start_time;
+        table->philo[i].table = table;
+        pthread_mutex_init(&table->philo[i].l_fork, NULL);
+        if (i + 1 == table->n_philos)
+            table->philo[i].r_fork = &table->philo[0].l_fork;
+        else
+            table->philo[i].r_fork = &table->philo[i + 1].l_fork;
+        i++;
+    }
+}
+static bool    check_limits(t_table *table)
+{
+    if (table->n_philos < 1 || table->n_philos > 200)
+        error_exit("Error\nNumber of philosophers must be between 1 and 200 !!!");
+    if ((table->t_2die < 60 || table->t_2eat < 60 || table->t_2sleep < 60) 
+        || (table->t_2die > INT_MAX || table->t_2eat > INT_MAX || table->t_2sleep > INT_MAX))
+        error_exit("Error\nTime to die, sleep or eat is Wrong !!!");
+    if (table->max_rounds < -1 || table->max_rounds > INT_MAX)
+        error_exit("Error\nAmount of Time to eat ir Wrong !!!");
     return (false);
 }

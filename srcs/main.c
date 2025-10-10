@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 11:57:21 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/09/26 15:49:46 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/10 15:08:58 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,13 +15,15 @@
 static bool     check_args(int ac, char **av, t_table *table);
 static bool     check_args_nbrs(char **av);
 
+//philosophers 8 800 100 100 [5]
+// n_philos | t_2die | t_2eat | t_2sleep | number_of_time_each_philo_must_eat (Optional Argument)
+
 int main(int ac, char **av)
 {
     t_table     table;
 
     if (check_args(ac, av, &table) == true)
         return (false);
-    
     return (0);
 }
 bool     check_args(int ac, char **av, t_table *table)
@@ -31,7 +33,9 @@ bool     check_args(int ac, char **av, t_table *table)
     else if (check_args_nbrs(av) == true)
         return (printf("Only Numbers are Accept\n"), true);
     if (init_table(ac, av, table) == true)
-        return (printf("Fail, Init Table Struct") ,true);
+        return (true);
+     /* for (int i = 0; i < table->n_philos; i++)
+        printf("Philo_ID:[%d]\n", table->philo[i].philo_nbr); */
     return (false);
 }
 bool    check_args_nbrs(char **av)

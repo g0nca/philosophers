@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:36:11 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/09/26 15:36:38 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/10 10:47:57 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,4 +44,9 @@ uint64_t	ft_time_ms(void)
 
 	gettimeofday(&time, NULL);
 	return (time.tv_sec * 1000 + time.tv_usec / 1000);
+}
+void	error_exit(const char *str)
+{
+	printf("%s\n", str);
+	exit(EXIT_FAILURE);
 }

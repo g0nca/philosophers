@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 11:58:47 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/09/26 15:49:21 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/10 11:53:22 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,4 +59,5 @@ bool    init_table(int ac, char **av, t_table *table);
 
 int	ft_atoi(const char *str);
 uint64_t	ft_time_ms(void);
+void	error_exit(const char *str);
 #endif
