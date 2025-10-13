@@ -6,12 +6,13 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 11:57:21 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/10 15:08:58 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/13 11:55:10 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/philosophers.h"
 
+static void     start_simulation(t_table *table);
 static bool     check_args(int ac, char **av, t_table *table);
 static bool     check_args_nbrs(char **av);
 
@@ -24,7 +25,19 @@ int main(int ac, char **av)
 
     if (check_args(ac, av, &table) == true)
         return (false);
+    start_simulation(&table);
     return (0);
+}
+void    start_simulation(t_table *table)
+{
+    int x;
+
+    x = 0;
+    while (x < table->n_philos)
+    {
+        pthread_create(&table->philo[x].thread, NULL, philosophing, &table->philo[x]);
+        x++;
+    }
 }
 bool     check_args(int ac, char **av, t_table *table)
 {
