@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:36:11 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/10 10:47:57 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/13 15:44:39 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,4 +49,11 @@ void	error_exit(const char *str)
 {
 	printf("%s\n", str);
 	exit(EXIT_FAILURE);
+}
+
+void    ft_message(t_philo *philo, const char *message)
+{
+    pthread_mutex_lock(&philo->table->sync);
+    printf("%lu [%d] %s", ft_time_ms() - philo->table->start_time, philo->philo_nbr, message);
+    pthread_mutex_unlock(&philo->table->sync);
 }

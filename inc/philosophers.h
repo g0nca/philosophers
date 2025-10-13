@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 11:58:47 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/13 11:44:03 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/13 15:44:44 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,4 +62,5 @@ void    *philosophing(void  *philo);
 int	ft_atoi(const char *str);
 uint64_t	ft_time_ms(void);
 void	error_exit(const char *str);
+void    ft_message(t_philo *philo, const char *message);
 #endif
