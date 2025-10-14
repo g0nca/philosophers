@@ -1,0 +1,247 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   philosophing.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/10/13 11:34:35 by ggomes-v          #+#    #+#             */
+/*   Updated: 2025/10/14 by assistant                ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../inc/philosophers.h"
+
+/* Protótipos das funções auxiliares */
+static void		*handle_one_philo(t_philo *philo);
+static bool		simulation_ended(t_philo *philo);
+static bool		print_message(t_philo *philo, char *msg);
+static void		ft_usleep_check(uint64_t ms, t_philo *philo);
+static void		initial_delay(t_philo *philo);
+static bool		take_forks(t_philo *philo);
+static bool		take_right_then_left(t_philo *philo);
+static bool		take_left_then_right(t_philo *philo);
+static bool		eat(t_philo *philo);
+static bool		sleep_and_think(t_philo *philo);
+
+/*
+** Função principal de cada thread (filósofo)
+** Implementa o ciclo: pegar garfos -> comer -> dormir -> pensar
+*/
+void	*philosophing(void *philo)
+{
+	t_philo	*p;
+
+	p = (t_philo *)philo;
+	if (p->table->n_philos == 1)
+		return (handle_one_philo(p));
+	initial_delay(p);
+	while (!simulation_ended(p))
+	{
+		if (!take_forks(p))
+			break ;
+		if (!eat(p))
+			break ;
+		if (!sleep_and_think(p))
+			break ;
+	}
+	return (NULL);
+}
+
+/*
+** Caso especial: apenas 1 filósofo
+** Pega um garfo e aguarda morrer (não pode comer sem 2 garfos)
+*/
+static void	*handle_one_philo(t_philo *philo)
+{
+	pthread_mutex_lock(&philo->l_fork);
+	print_message(philo, "has taken a fork");
+	ft_usleep_check(philo->table->t_2die, philo);
+	pthread_mutex_unlock(&philo->l_fork);
+	return (NULL);
+}
+
+/*
+** Verifica se a simulação terminou (alguém morreu ou todos comeram suficiente)
+** Thread-safe: protegido por mutex
+*/
+static bool	simulation_ended(t_philo *philo)
+{
+	bool	ended;
+
+	pthread_mutex_lock(&philo->table->sync);
+	ended = philo->table->philo_dead || philo->table->philos_full;
+	pthread_mutex_unlock(&philo->table->sync);
+	return (ended);
+}
+
+/*
+** Imprime mensagem apenas se a simulação não terminou
+** Formato: timestamp_ms philosopher_id message
+*/
+static bool	print_message(t_philo *philo, char *msg)
+{
+	uint64_t	timestamp;
+
+	pthread_mutex_lock(&philo->table->sync);
+	if (philo->table->philo_dead || philo->table->philos_full)
+	{
+		pthread_mutex_unlock(&philo->table->sync);
+		return (false);
+	}
+	timestamp = ft_time_ms() - philo->table->start_time;
+	printf("%lu %d %s\n", timestamp, philo->philo_nbr, msg);
+	pthread_mutex_unlock(&philo->table->sync);
+	return (true);
+}
+
+/*
+** Sleep inteligente: dorme em intervalos curtos verificando o estado
+** Isso garante detecção rápida de morte (< 10ms)
+*/
+static void	ft_usleep_check(uint64_t ms, t_philo *philo)
+{
+	uint64_t	start;
+
+	start = ft_time_ms();
+	while (ft_time_ms() - start < ms)
+	{
+		if (simulation_ended(philo))
+			break ;
+		usleep(500);
+	}
+}
+
+/*
+** Delay inicial para dessincronizar filósofos
+** Filósofos pares esperam 10ms antes de começar
+*/
+static void	initial_delay(t_philo *philo)
+{
+	if (philo->philo_nbr % 2 == 0)
+		ft_usleep_check(10, philo);
+}
+
+/*
+** Decide a ordem de pegar garfos baseado no ID (par ou ímpar)
+** Isso previne deadlock circular
+*/
+static bool	take_forks(t_philo *philo)
+{
+	if (philo->philo_nbr % 2 == 0)
+		return (take_right_then_left(philo));
+	else
+		return (take_left_then_right(philo));
+}
+
+/*
+** Filósofos PARES: pegam garfo DIREITO primeiro, depois ESQUERDO
+*/
+static bool	take_right_then_left(t_philo *philo)
+{
+	if (simulation_ended(philo))
+		return (false);
+	pthread_mutex_lock(philo->r_fork);
+	if (!print_message(philo, "has taken a fork"))
+	{
+		pthread_mutex_unlock(philo->r_fork);
+		return (false);
+	}
+	if (simulation_ended(philo))
+	{
+		pthread_mutex_unlock(philo->r_fork);
+		return (false);
+	}
+	pthread_mutex_lock(&philo->l_fork);
+	if (!print_message(philo, "has taken a fork"))
+	{
+		pthread_mutex_unlock(&philo->l_fork);
+		pthread_mutex_unlock(philo->r_fork);
+		return (false);
+	}
+	return (true);
+}
+
+/*
+** Filósofos ÍMPARES: pegam garfo ESQUERDO primeiro, depois DIREITO
+*/
+static bool	take_left_then_right(t_philo *philo)
+{
+	if (simulation_ended(philo))
+		return (false);
+	pthread_mutex_lock(&philo->l_fork);
+	if (!print_message(philo, "has taken a fork"))
+	{
+		pthread_mutex_unlock(&philo->l_fork);
+		return (false);
+	}
+	if (simulation_ended(philo))
+	{
+		pthread_mutex_unlock(&philo->l_fork);
+		return (false);
+	}
+	pthread_mutex_lock(philo->r_fork);
+	if (!print_message(philo, "has taken a fork"))
+	{
+		pthread_mutex_unlock(philo->r_fork);
+		pthread_mutex_unlock(&philo->l_fork);
+		return (false);
+	}
+	return (true);
+}
+
+/*
+** Ação de comer:
+** 1. Atualiza last_meal (CRÍTICO para detecção de morte!)
+** 2. Incrementa contador de refeições
+** 3. Imprime "is eating"
+** 4. Espera t_2eat milissegundos
+** 5. Verifica se completou refeições necessárias
+** 6. Libera os garfos
+*/
+static bool	eat(t_philo *philo)
+{
+	if (simulation_ended(philo))
+	{
+		pthread_mutex_unlock(&philo->l_fork);
+		pthread_mutex_unlock(philo->r_fork);
+		return (false);
+	}
+	pthread_mutex_lock(&philo->table->sync);
+	philo->meal_nbr++;
+	philo->last_meal = ft_time_ms();
+	pthread_mutex_unlock(&philo->table->sync);
+	if (!print_message(philo, "is eating"))
+	{
+		pthread_mutex_unlock(&philo->l_fork);
+		pthread_mutex_unlock(philo->r_fork);
+		return (false);
+	}
+	ft_usleep_check(philo->table->t_2eat, philo);
+	if (philo->table->max_rounds != -1)
+	{
+		pthread_mutex_lock(&philo->table->sync);
+		if (philo->meal_nbr >= philo->table->max_rounds)
+			philo->table->how_many_r_full++;
+		pthread_mutex_unlock(&philo->table->sync);
+	}
+	pthread_mutex_unlock(&philo->l_fork);
+	pthread_mutex_unlock(philo->r_fork);
+	return (true);
+}
+
+/*
+** Ações de dormir e pensar:
+** 1. Imprime "is sleeping"
+** 2. Espera t_2sleep milissegundos
+** 3. Imprime "is thinking"
+*/
+static bool	sleep_and_think(t_philo *philo)
+{
+	if (!print_message(philo, "is sleeping"))
+		return (false);
+	ft_usleep_check(philo->table->t_2sleep, philo);
+	if (!print_message(philo, "is thinking"))
+		return (false);
+	return (true);
+}

@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 11:34:35 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/14 12:33:55 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/14 14:52:50 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 static  void    *ft_one_philo(t_philo *philo);
 static void     initial_delay(t_philo *philo);
+static void     *take_forks(t_philo *p);
 
 /*
     Funcao principal de cada thread (filosofo)
@@ -31,12 +32,14 @@ void    *philosophing(void  *philo)
     {
         if (!take_forks(p))
             break ;
-        if (!eat(p))
-            break ;
-        if (!sleep_and_think(p))
-            break ;
+
     }
     return (NULL);
+}
+
+static void     *take_forks(t_philo *p)
+{
+    
 }
 /*
     Delay inicial para dessincronizar filosofos
