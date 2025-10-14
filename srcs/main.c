@@ -6,16 +6,16 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 11:57:21 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/13 14:00:40 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/14 11:04:12 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/philosophers.h"
 
+static void    destroy_mutex(t_table *table);
 static void    join_threads(t_table *table);
 static void     start_simulation(t_table *table);
-static bool     check_args(int ac, char **av, t_table *table);
-static bool     check_args_nbrs(char **av);
+void    philos_monitor(t_table *table);
 
 //philosophers 8 800 100 100 [5]
 // n_philos | t_2die | t_2eat | t_2sleep | number_of_time_each_philo_must_eat (Optional Argument)
@@ -28,21 +28,12 @@ int main(int ac, char **av)
         return (false);
     pthread_mutex_init(&table.sync, NULL);
     start_simulation(&table);
+    philos_monitor(&table);
     join_threads(&table);
+    destroy_mutex(&table);
     return (0);
 }
 
-void    join_threads(t_table *table)
-{
-    int     x;
-
-    x = 0;
-    while (x < table->n_philos)
-    {
-        pthread_join(table->philo[x].thread, NULL);
-        x++;
-    }
-}
 void    start_simulation(t_table *table)
 {
     int x;
@@ -54,35 +45,63 @@ void    start_simulation(t_table *table)
         x++;
     }
 }
-bool     check_args(int ac, char **av, t_table *table)
-{
-    if (ac != 5 && ac != 6)
-        return (printf("%d -> Wrong Number of Args\n", ac), true);
-    else if (check_args_nbrs(av) == true)
-        return (printf("Only Numbers are Accept\n"), true);
-    if (init_table(ac, av, table) == true)
-        return (true);
-     /* for (int i = 0; i < table->n_philos; i++)
-        printf("Philo_ID:[%d]\n", table->philo[i].philo_nbr); */
-    return (false);
-}
-bool    check_args_nbrs(char **av)
-{
-    int     i;
-    int     j;
 
-    i = 1;
-    while (av[i])
+void    philos_monitor(t_table *table)
+{
+    int x;
+    bool end_simulation;
+
+    end_simulation = 0;
+    while (!end_simulation)
     {
-        j = 0;
-        while (av[i][j])
+        x = 0;
+        while (x < table->n_philos)
         {
-            if (av[i][j] < '0' || av[i][j] > '9')
-                return (true);
-            else
-                j++;
+            pthread_mutex_lock(&table->sync);
+            if (ft_time_ms() - table->philo[x].last_meal > (uint64_t)table->t_2die)
+            {
+                table->philo_dead = true;
+                printf("%lu [%d] died\n", ft_time_ms() - table->start_time, table->philo[x].philo_nbr);
+                end_simulation = true;
+                pthread_mutex_unlock(&table->sync);
+                break ;
+            }
+            if (table->max_rounds != -1 && table->how_many_r_full >= table->n_philos)
+            {
+                table->philos_full = true;
+                printf("Every Philosopher has eaten %d times\n", table->max_rounds);
+                pthread_mutex_unlock(&table->sync);
+            }
+            pthread_mutex_unlock(&table->sync);
+            x++;
         }
-        i++;
+        usleep(1000);
     }
-    return (false);
 }
+
+void    join_threads(t_table *table)
+{
+    (void)table;
+    int     x;
+
+    x = 0;
+    while (x < table->n_philos)
+    {
+        pthread_join(table->philo[x].thread, NULL);
+        x++;
+    }
+}
+
+void    destroy_mutex(t_table *table)
+{
+    int x;
+
+    x = 0;
+    while (x < table->n_philos)
+    {
+        pthread_mutex_destroy(&table->philo[x].l_fork);
+        x++;
+    }
+    pthread_mutex_destroy(&table->sync);
+}
+

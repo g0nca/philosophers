@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:36:11 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/13 15:44:39 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/14 12:28:36 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,10 +50,39 @@ void	error_exit(const char *str)
 	printf("%s\n", str);
 	exit(EXIT_FAILURE);
 }
-
-void    ft_message(t_philo *philo, const char *message)
+/* Imprime a mensagem apenas se a simulacao nao terminou */
+bool    ft_message(t_philo *philo, const char *message)
 {
-    pthread_mutex_lock(&philo->table->sync);
-    printf("%lu [%d] %s", ft_time_ms() - philo->table->start_time, philo->philo_nbr, message);
+	pthread_mutex_lock(&philo->table->sync);
+	if (philo->table->philo_dead == true || philo->table->philos_full == true)
+	{
+		pthread_mutex_unlock(&philo->table->sync);
+		return (false);
+	}
+    printf("%lu [%d] %s\n", ft_time_ms() - philo->table->start_time, philo->philo_nbr, message);
     pthread_mutex_unlock(&philo->table->sync);
+	return (true);
 }
+
+void	ft_usleep_check(uint64_t ms, t_philo *philo)
+{
+	uint64_t	start;
+
+	start = ft_time_ms();
+	while (ft_time_ms() - start < ms)
+	{
+		if (simulation_ended(philo))
+			break ;
+		usleep(500);
+	}
+}
+bool		simulation_ended(t_philo *philo)
+{
+	bool	ended;
+
+	pthread_mutex_lock(&philo->table->sync);
+	ended = philo->table->philo_dead || philo->table->philos_full;
+	pthread_mutex_unlock(&philo->table->sync);
+	return (ended);
+}
+
