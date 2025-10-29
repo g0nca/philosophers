@@ -22,7 +22,7 @@
 
 ## 📋 Sobre o Projeto
 
-O **Philosophers** é um projeto da 42 School que implementa uma solução para o problema clássico de sincronização de processos conhecido como "O Jantar dos Filósofos", proposto por Edsger Dijkstra em 1965.
+O **Philosophers** é um projeto que implementa uma solução para o problema clássico de sincronização de processos conhecido como "O Jantar dos Filósofos", proposto por Edsger Dijkstra em 1965.
 
 ### 🎯 Objetivo
 
