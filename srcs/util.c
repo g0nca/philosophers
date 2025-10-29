@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:36:11 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/14 12:28:36 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/29 11:24:53 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,6 +76,7 @@ void	ft_usleep_check(uint64_t ms, t_philo *philo)
 		usleep(500);
 	}
 }
+
 bool		simulation_ended(t_philo *philo)
 {
 	bool	ended;

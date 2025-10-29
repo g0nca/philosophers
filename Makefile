@@ -6,7 +6,7 @@
 #    By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/09/26 11:42:21 by ggomes-v          #+#    #+#              #
-#    Updated: 2025/10/14 09:50:23 by ggomes-v         ###   ########.fr        #
+#    Updated: 2025/10/29 10:00:42 by ggomes-v         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,6 +23,7 @@ PHILO_SRCS  := srcs/main.c \
                srcs/init_table.c \
                srcs/util.c \
 			   srcs/philosophing.c \
+			   srcs/philosophing_utils.c \
 			   srcs/check_args.c
 PHILO_OBJS  := $(PHILO_SRCS:srcs/%.c=$(OBJ_DIR)/%.o)
 

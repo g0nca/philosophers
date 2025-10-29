@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 11:58:47 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/14 12:22:09 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/29 09:58:52 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,5 +68,8 @@ void	error_exit(const char *str);
 bool    ft_message(t_philo *philo, const char *message);
 void	ft_usleep_check(uint64_t ms, t_philo *philo);
 bool		simulation_ended(t_philo *philo);
+
+void     initial_delay(t_philo *philo);
+void    *ft_one_philo(t_philo *philo);
 
 #endif

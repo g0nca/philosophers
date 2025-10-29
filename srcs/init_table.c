@@ -6,17 +6,12 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 14:51:06 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/13 11:29:00 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/29 11:22:07 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/philosophers.h"
 
-// Limites: Numero de fisolofos nao pode ser menor que 1 e maior que 200
-// Tempo para morrer nao pode ser menor que 60 e maior que o INT_MAX
-// Tempo para comer nao pode ser menor que 60 e maior que o INT_MAX
-// Quantas vezes eles precisam de comer tambem nao pode ser menor que -1 e maior que o INT_MAX
-//
 static bool    check_limits(t_table *table);
 static void philos_start(t_table *table);
 
