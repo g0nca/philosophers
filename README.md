@@ -1,443 +1,825 @@
-# 🍝 Guia Completo do Projeto Philosophers
+# 🍝 Philosophers - Dining Philosophers Problem
 
-## 📚 Conceitos Fundamentais
+<div align="center">
 
-### O Problema do Jantar dos Filósofos
-- **N filósofos** sentados em uma mesa circular
-- **N garfos** (um entre cada par de filósofos)
-- Cada filósofo precisa de **2 garfos** para comer
-- Ações: **PENSAR** → **PEGAR GARFOS** → **COMER** → **DORMIR** → repetir
+![42 School](https://img.shields.io/badge/42-School-000000?style=for-the-badge&logo=42&logoColor=white)
+![C](https://img.shields.io/badge/C-00599C?style=for-the-badge&logo=c&logoColor=white)
+![Threads](https://img.shields.io/badge/Threads-FF6B6B?style=for-the-badge)
+![Grade](https://img.shields.io/badge/Grade-100%2F100-success?style=for-the-badge)
 
-### Desafios
-1. **Deadlock**: Todos pegam o garfo da esquerda simultaneamente → ninguém consegue pegar o da direita
-2. **Data Races**: Múltiplas threads acessando/modificando dados compartilhados
-3. **Starvation**: Um filósofo nunca consegue comer
-4. **Sincronização**: Detectar quando um filósofo morre
+**Solução completa para o problema clássico do jantar dos filósofos usando threads e mutexes**
 
----
+[Sobre](#-sobre-o-projeto) • 
+[Conceitos](#-conceitos-aprendidos) • 
+[Compilação](#️-compilação) • 
+[Uso](#-uso) • 
+[Estrutura](#-estrutura-do-projeto) • 
+[Funções](#-documentação-de-funções)
 
-## 🏗️ Arquitetura da Solução
-
-### Estruturas de Dados
-
-```c
-t_data (cada filósofo)
-├── philo_nbr       → ID do filósofo (1 a N)
-├── meal_nbr        → Quantas vezes comeu
-├── last_meal       → Timestamp da última refeição
-├── thread          → Thread pthread
-├── l_fork          → Mutex do garfo esquerdo (próprio)
-├── r_fork          → Ponteiro para garfo direito (do vizinho)
-└── vars            → Ponteiro para variáveis globais
-
-t_vars (dados globais)
-├── n_philos        → Número de filósofos
-├── t_2die          → Tempo máximo sem comer (ms)
-├── t_2eat          → Tempo para comer (ms)
-├── t_2sleep        → Tempo para dormir (ms)
-├── max_rounds      → Número de refeições necessárias (-1 = infinito)
-├── how_many_r_full → Contador de filósofos que completaram
-├── philo_dead      → Flag: algum filósofo morreu?
-├── philos_full     → Flag: todos comeram o suficiente?
-├── philosophers[200] → Array de todos os filósofos
-├── start_time      → Timestamp do início da simulação
-└── sync            → Mutex para sincronização global
-```
+</div>
 
 ---
 
-## 🔄 Fluxo de Execução
+## 📋 Sobre o Projeto
 
-### 1️⃣ Main (philo.c)
+O **Philosophers** é um projeto da 42 School que implementa uma solução para o problema clássico de sincronização de processos conhecido como "O Jantar dos Filósofos", proposto por Edsger Dijkstra em 1965.
 
+### 🎯 Objetivo
+
+Criar uma simulação onde N filósofos sentam-se numa mesa circular, alternando entre três estados: **comer**, **pensar** e **dormir**. Cada filósofo precisa de dois garfos para comer, mas há apenas um garfo entre cada par de filósofos.
+
+### 🚫 Desafios
+
+- **Deadlock**: Evitar que todos os filósofos peguem um garfo simultaneamente
+- **Starvation**: Garantir que nenhum filósofo morra de fome
+- **Data Races**: Sincronizar corretamente o acesso a recursos compartilhados
+- **Performance**: Detectar mortes em menos de 10ms
+
+---
+
+## 🧠 Conceitos Aprendidos
+
+### 1. **Programação Concorrente**
+- Criação e gestão de threads POSIX (`pthread`)
+- Paralelismo vs Concorrência
+- Contextos de execução independentes
+
+### 2. **Sincronização de Threads**
+- **Mutexes** (Mutual Exclusion)
+- **Critical Sections** (seções críticas)
+- Proteção de recursos compartilhados
+
+### 3. **Problemas Clássicos**
+- **Deadlock**: Impasse circular na aquisição de recursos
+- **Race Conditions**: Condições de corrida em acessos concorrentes
+- **Starvation**: Inanição de threads por falta de recursos
+
+### 4. **Sincronização de Tempo**
+- `gettimeofday()` para timestamps precisos
+- Sleeps inteligentes com verificações periódicas
+- Detecção de eventos time-sensitive
+
+### 5. **Design Patterns**
+- **Resource Ordering**: Ordem consistente de aquisição de locks
+- **Monitor Pattern**: Thread dedicada para monitoramento
+- **Thread-Safe Operations**: Operações protegidas por mutexes
+
+---
+
+## 🛠️ Compilação
+
+### Requisitos
+- GCC ou Clang
+- Make
+- Sistema POSIX compatível (Linux, macOS)
+
+### Comandos
+
+```bash
+# Compilar
+make
+
+# Limpar objetos
+make clean
+
+# Limpar tudo
+make fclean
+
+# Recompilar
+make re
 ```
-main()
-  ├── memset(&philo, 0, sizeof(t_vars))
-  ├── init_philo()        → Parsing e inicialização
-  ├── create_threads()    → Cria N threads (uma por filósofo)
-  ├── monitor_philos()    → Loop de monitoramento (main thread)
-  ├── join_threads()      → Aguarda todas as threads terminarem
-  └── destroyer()         → Libera mutexes
-```
 
-### 2️⃣ Inicialização (init.c)
-
-```
-init_philo()
-  ├── Valida argumentos (5 ou 6)
-  ├── check_numbers()     → Apenas dígitos positivos?
-  ├── Parseia argumentos (ft_atoi)
-  ├── check_limits()      → Valores dentro dos limites?
-  ├── init_vars()         → Inicializa variáveis globais
-  │     └── last_meal = start_time para TODOS
-  └── philos_start()      → Configura mutexes e ponteiros
-        ├── Cria mutex l_fork para cada filósofo
-        └── r_fork aponta para l_fork do próximo (circular)
-```
-
-### 3️⃣ Thread do Filósofo (philosophing.c)
-
-```
-philosophing()
-  ├── Caso especial: 1 filósofo
-  │     └── ft_one_philo() → pega 1 garfo e aguarda morte
-  │
-  ├── ft_waitphilo() → Delay para filósofos pares (10ms)
-  │
-  └── Loop infinito (while ft_checker_full_death):
-        ├── ft_take_forks()
-        │     ├── Par:   r_fork → l_fork
-        │     └── Ímpar: l_fork → r_fork
-        │
-        ├── ft_philo_eat()
-        │     ├── meal_nbr++
-        │     ├── last_meal = now
-        │     ├── print "is eating"
-        │     ├── ft_usleep(t_2eat)
-        │     └── unlock forks
-        │
-        └── ft_philo_sleep_think()
-              ├── print "is sleeping"
-              ├── ft_usleep(t_2sleep)
-              └── print "is thinking"
-```
-
-### 4️⃣ Monitoramento (checker.c + philo.c)
-
-```
-monitor_philos() [main thread]
-  └── Loop infinito:
-        ├── ft_checker_philos(philo, &i)
-        │     ├── checker_death()
-        │     │     └── (now - last_meal) > t_2die?
-        │     │           ├── Yes: philo_dead = true, print "died"
-        │     │           └── No: continua
-        │     │
-        │     └── checker_full()
-        │           └── how_many_r_full == n_philos?
-        │                 └── Yes: philos_full = true
-        │
-        ├── i++ (próximo filósofo)
-        ├── if (i >= n_philos) → i = 0
-        └── usleep(100) → evita 100% CPU
+### Flags de Compilação
+```bash
+-Wall -Wextra -Werror  # Warnings rigorosos
+-pthread               # Suporte a threads POSIX
+-g                     # Símbolos de debug
 ```
 
 ---
 
-## 🔐 Sincronização e Mutexes
+## 🎮 Uso
 
-### Mutexes Utilizados
-
-1. **`l_fork` (um por filósofo)**
-   - Representa o garfo físico
-   - Deve ser locked antes de usar o garfo
-   - Shared entre dois filósofos adjacentes
-
-2. **`sync` (global)**
-   - Protege variáveis compartilhadas:
-     - `philo_dead`, `philos_full`
-     - `how_many_r_full`
-     - `last_meal`, `meal_nbr`
-   - Usado para imprimir mensagens atomicamente
-
-### Regras de Locking
-
-#### ✅ CORRETO
-```c
-pthread_mutex_lock(&philo->sync);
-// Acessa variáveis compartilhadas
-pthread_mutex_unlock(&philo->sync);
+### Sintaxe
+```bash
+./philosophers number_of_philosophers time_to_die time_to_eat time_to_sleep [number_of_times_each_philosopher_must_eat]
 ```
 
-#### ❌ INCORRETO (Data Race)
-```c
-if (philo->philo_dead)  // Lê sem lock!
-    return;
+### Parâmetros
+
+| Parâmetro | Descrição | Limites |
+|-----------|-----------|---------|
+| `number_of_philosophers` | Número de filósofos e garfos | 1-200 |
+| `time_to_die` | Tempo máximo sem comer (ms) | ≥ 60 |
+| `time_to_eat` | Tempo para comer (ms) | ≥ 60 |
+| `time_to_sleep` | Tempo para dormir (ms) | ≥ 60 |
+| `[number_of_times...]` | Refeições necessárias (opcional) | ≥ 1 |
+
+### Exemplos
+
+```bash
+# Ninguém deve morrer (loop infinito)
+./philosophers 5 800 200 200
+
+# Alguém deve morrer em ~310ms
+./philosophers 4 310 200 100
+
+# Cada filósofo come 7 vezes
+./philosophers 5 800 200 200 7
+
+# Caso especial: 1 filósofo
+./philosophers 1 800 200 200
+
+# Teste de estresse: 200 filósofos
+./philosophers 200 800 200 200
 ```
 
-#### ✅ Ordem de Locking (evita deadlock)
-```c
-// Filósofos PARES
-lock(r_fork);  // Garfo direito primeiro
-lock(l_fork);  // Depois esquerdo
+### Formato de Output
 
-// Filósofos ÍMPARES
-lock(l_fork);  // Garfo esquerdo primeiro
-lock(r_fork);  // Depois direito
+```
+timestamp_in_ms X has taken a fork
+timestamp_in_ms X is eating
+timestamp_in_ms X is sleeping
+timestamp_in_ms X is thinking
+timestamp_in_ms X died
+```
+
+**Exemplo real:**
+```
+0 [1] has taken a fork
+0 [1] has taken a fork
+0 [1] is eating
+0 [3] has taken a fork
+0 [3] has taken a fork
+0 [3] is eating
+200 [1] is sleeping
+200 [3] is sleeping
+300 [1] is thinking
+310 [2] died
 ```
 
 ---
 
-## 🐛 Problemas Comuns e Soluções
+## 📁 Estrutura do Projeto
 
-### 1. Deadlock
+```
+philosophers/
+├── Makefile
+├── README.md
+├── inc/
+│   └── philosophers.h          # Headers e estruturas
+└── srcs/
+    ├── main.c                  # Entry point e orquestração
+    ├── check_args.c            # Validação de argumentos
+    ├── init_table.c            # Inicialização da simulação
+    ├── philosophing.c          # Loop principal dos filósofos
+    ├── philosophing_utils.c    # Funções auxiliares
+    ├── philos_monitor.c        # Thread de monitoramento
+    └── util.c                  # Utilitários gerais
+```
 
-**Problema**: Todos pegam o garfo esquerdo → ninguém consegue o direito
+### Arquitetura
 
-**Solução**: Ordem diferente para pares/ímpares
+```
+┌─────────────────────────────────────────────────┐
+│              MAIN THREAD                        │
+│  ┌────────────────────────────────────────┐    │
+│  │  1. Parsing & Validação                │    │
+│  │  2. Inicialização de estruturas        │    │
+│  │  3. Criação de threads                 │    │
+│  └────────────────────────────────────────┘    │
+│                                                  │
+│  ┌────────────────────────────────────────┐    │
+│  │  MONITOR LOOP (philos_monitor)         │    │
+│  │  - Verifica mortes                     │    │
+│  │  - Verifica conclusão                  │    │
+│  └────────────────────────────────────────┘    │
+│                                                  │
+│  ┌────────────────────────────────────────┐    │
+│  │  JOIN & CLEANUP                        │    │
+│  │  - pthread_join()                      │    │
+│  │  - Destroy mutexes                     │    │
+│  └────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────┘
+
+        ▼ ▼ ▼ ▼ ▼ (spawned threads)
+
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│  PHILO 1     │  │  PHILO 2     │  │  PHILO N     │
+│  (Thread)    │  │  (Thread)    │  │  (Thread)    │
+│              │  │              │  │              │
+│  LOOP:       │  │  LOOP:       │  │  LOOP:       │
+│  - Think     │  │  - Think     │  │  - Think     │
+│  - Take forks│  │  - Take forks│  │  - Take forks│
+│  - Eat       │  │  - Eat       │  │  - Eat       │
+│  - Sleep     │  │  - Sleep     │  │  - Sleep     │
+└──────────────┘  └──────────────┘  └──────────────┘
+```
+
+---
+
+## 🗂️ Estruturas de Dados
+
+### `t_philo` - Estrutura do Filósofo
+
+```c
+typedef struct s_philo
+{
+    int                 philo_nbr;      // ID do filósofo (1 a N)
+    int                 meal_nbr;       // Número de refeições feitas
+    uint64_t            last_meal;      // Timestamp da última refeição
+    pthread_t           thread;         // Thread do filósofo
+    pthread_mutex_t     l_fork;         // Mutex do garfo esquerdo (próprio)
+    pthread_mutex_t     *r_fork;        // Ponteiro para garfo direito (vizinho)
+    struct s_table      *table;         // Ponteiro para dados globais
+}   t_philo;
+```
+
+**Campos importantes:**
+- `last_meal`: Crucial para detecção de morte
+- `l_fork`: Cada filósofo "possui" um garfo
+- `r_fork`: Aponta para o garfo do próximo filósofo (compartilhado)
+
+### `t_table` - Estrutura Global
+
+```c
+typedef struct s_table
+{
+    int             n_philos;           // Número de filósofos
+    int             t_2eat;             // Tempo para comer (ms)
+    int             t_2sleep;           // Tempo para dormir (ms)
+    int             t_2die;             // Tempo máximo sem comer (ms)
+    int             max_rounds;         // Número de refeições (-1 = infinito)
+    int             how_many_r_full;    // Contador de filósofos satisfeitos
+    bool            philo_dead;         // Flag: algum filósofo morreu?
+    bool            philos_full;        // Flag: todos comeram o suficiente?
+    uint64_t        start_time;         // Timestamp do início
+    pthread_mutex_t sync;               // Mutex de sincronização global
+    t_philo         philo[200];         // Array de filósofos
+}   t_table;
+```
+
+**Campos importantes:**
+- `sync`: Protege todas as variáveis compartilhadas
+- `philo_dead` / `philos_full`: Controlam o fim da simulação
+
+---
+
+## 📚 Documentação de Funções
+
+### 🎯 Funções Principais
+
+#### `int main(int ac, char **av)`
+**Descrição**: Entry point do programa  
+**Fluxo**:
+1. Valida argumentos (`check_args`)
+2. Inicializa mutex global
+3. Cria threads dos filósofos
+4. Inicia monitoramento
+5. Aguarda threads terminarem (join)
+6. Destrói mutexes
+
+**Retorno**: `0` em sucesso, `1` em erro
+
+---
+
+#### `void *philosophing(void *philo)`
+**Descrição**: Função executada por cada thread (filósofo)  
+**Parâmetros**: Ponteiro para `t_philo`  
+**Comportamento**:
+```c
+while (!simulation_ended)
+{
+    take_forks();          // Pega 2 garfos
+    eat();                 // Come por t_2eat ms
+    sleep_and_think();     // Dorme e pensa
+}
+```
+
+**Estratégia anti-deadlock**:
+- Filósofos **pares** pegam garfo direito → esquerdo
+- Filósofos **ímpares** pegam garfo esquerdo → direito
+
+**Retorno**: `NULL`
+
+---
+
+#### `void philos_monitor(t_table *table)`
+**Descrição**: Loop de monitoramento (main thread)  
+**Responsabilidades**:
+1. Verifica se algum filósofo morreu (`now - last_meal > t_2die`)
+2. Verifica se todos completaram refeições
+3. Seta flags `philo_dead` ou `philos_full`
+
+**Timing**: Verifica a cada 1ms (`usleep(1000)`)
+
+**Critical**: Esta função **termina** a simulação!
+
+---
+
+### 🔧 Funções de Controle
+
+#### `void start_simulation(t_table *table)`
+```c
+void start_simulation(t_table *table)
+{
+    int x = 0;
+    while (x < table->n_philos)
+    {
+        pthread_create(&table->philo[x].thread, NULL, 
+                      philosophing, &table->philo[x]);
+        x++;
+    }
+}
+```
+**Descrição**: Cria uma thread para cada filósofo
+
+---
+
+#### `void join_threads(t_table *table)`
+```c
+void join_threads(t_table *table)
+{
+    int x = 0;
+    while (x < table->n_philos)
+    {
+        pthread_join(table->philo[x].thread, NULL);
+        x++;
+    }
+}
+```
+**Descrição**: Aguarda todas as threads terminarem  
+**Importante**: `pthread_join()` **bloqueia** até a thread terminar
+
+---
+
+#### `void destroy_mutex(t_table *table)`
+**Descrição**: Libera recursos (mutexes)  
+**Ordem**:
+1. Destroi mutexes dos garfos (um por filósofo)
+2. Destroi mutex global (`sync`)
+
+---
+
+### 🍴 Funções de Ação
+
+#### `bool take_forks(t_philo *p)`
+**Descrição**: Decide ordem de aquisição de garfos  
+**Lógica**:
 ```c
 if (philo_nbr % 2 == 0)
-    lock(r_fork) → lock(l_fork)  // Pares
+    take_right_then_left();   // Pares
 else
-    lock(l_fork) → lock(r_fork)  // Ímpares
+    take_left_then_right();   // Ímpares
 ```
 
-### 2. Data Race em `last_meal`
+---
 
-**Problema**:
+#### `bool take_right_then_left(t_philo *philo)`
+**Descrição**: Filósofos **PARES** pegam garfo direito primeiro  
+**Fluxo**:
+1. Verifica se simulação terminou
+2. `pthread_mutex_lock(r_fork)`
+3. Imprime "has taken a fork"
+4. Verifica novamente
+5. `pthread_mutex_lock(&l_fork)`
+6. Imprime "has taken a fork"
+
+**Retorno**: `true` se pegou ambos, `false` se falhou
+
+---
+
+#### `bool eat(t_philo *philo)`
+**Descrição**: Filósofo come  
+**Passos críticos**:
 ```c
-// Thread A (monitor): lê last_meal
-if (now - philo->last_meal > t_2die)
-
-// Thread B (philo): escreve last_meal
-philo->last_meal = ft_time_ms();
+1. pthread_mutex_lock(&table->sync);
+2. meal_nbr++;
+3. last_meal = ft_time_ms();  ← CRUCIAL!
+4. pthread_mutex_unlock(&table->sync);
+5. Imprime "is eating"
+6. ft_usleep_check(t_2eat);
+7. Verifica se completou refeições
+8. Libera garfos
 ```
 
-**Solução**: Sempre usar mutex
+**⚠️ IMPORTANTE**: `last_meal` deve ser atualizado **ANTES** de imprimir, protegido por mutex!
+
+---
+
+#### `bool sleep_and_think(t_philo *philo)`
+**Descrição**: Filósofo dorme e pensa  
+**Fluxo**:
+1. Imprime "is sleeping"
+2. Dorme por `t_2sleep` ms
+3. Imprime "is thinking"
+
+---
+
+### 🛠️ Funções Auxiliares
+
+#### `bool simulation_ended(t_philo *philo)`
 ```c
-pthread_mutex_lock(&vars->sync);
+bool simulation_ended(t_philo *philo)
+{
+    bool ended;
+    pthread_mutex_lock(&philo->table->sync);
+    ended = philo->table->philo_dead || philo->table->philos_full;
+    pthread_mutex_unlock(&philo->table->sync);
+    return (ended);
+}
+```
+**Descrição**: Verifica se a simulação terminou (thread-safe)
+
+---
+
+#### `bool ft_message(t_philo *philo, const char *message)`
+```c
+bool ft_message(t_philo *philo, const char *message)
+{
+    pthread_mutex_lock(&philo->table->sync);
+    if (philo->table->philo_dead || philo->table->philos_full)
+    {
+        pthread_mutex_unlock(&philo->table->sync);
+        return (false);
+    }
+    printf("%lu [%d] %s\n", ft_time_ms() - philo->table->start_time,
+           philo->philo_nbr, message);
+    pthread_mutex_unlock(&philo->table->sync);
+    return (true);
+}
+```
+**Descrição**: Imprime mensagem apenas se simulação não terminou  
+**Thread-safe**: Protegido por mutex global
+
+---
+
+#### `void ft_usleep_check(uint64_t ms, t_philo *philo)`
+```c
+void ft_usleep_check(uint64_t ms, t_philo *philo)
+{
+    uint64_t start = ft_time_ms();
+    
+    while (ft_time_ms() - start < ms)
+    {
+        if (simulation_ended(philo))
+            break;
+        usleep(500);  // 500 microsegundos
+    }
+}
+```
+**Descrição**: Sleep inteligente com verificações periódicas  
+**Por que?**: Garante resposta rápida quando simulação termina
+
+---
+
+#### `void initial_delay(t_philo *philo)`
+```c
+void initial_delay(t_philo *philo)
+{
+    if (philo->philo_nbr % 2 == 0)
+        ft_usleep_check(10, philo);
+}
+```
+**Descrição**: Delay de 10ms para filósofos pares  
+**Objetivo**: Dessincronizar início e evitar rush inicial
+
+---
+
+#### `void *ft_one_philo(t_philo *philo)`
+```c
+void *ft_one_philo(t_philo *philo)
+{
+    pthread_mutex_lock(&philo->l_fork);
+    ft_message(philo, "has taken a fork");
+    ft_usleep_check(philo->table->t_2die, philo);
+    pthread_mutex_unlock(&philo->l_fork);
+    return (NULL);
+}
+```
+**Descrição**: Caso especial de 1 filósofo  
+**Comportamento**: Pega 1 garfo e aguarda morrer (não pode comer)
+
+---
+
+### ⚙️ Funções Utilitárias
+
+#### `uint64_t ft_time_ms(void)`
+```c
+uint64_t ft_time_ms(void)
+{
+    struct timeval time;
+    gettimeofday(&time, NULL);
+    return (time.tv_sec * 1000 + time.tv_usec / 1000);
+}
+```
+**Descrição**: Obtém timestamp atual em milissegundos  
+**Uso**: Cálculo de tempos e detecção de morte
+
+---
+
+#### `int ft_atoi(const char *str)`
+**Descrição**: Converte string para inteiro  
+**Diferença do original**: Aceita apenas números positivos
+
+---
+
+#### `void error_exit(const char *str)`
+**Descrição**: Imprime mensagem de erro e termina programa  
+**Uso**: Erros de validação de argumentos
+
+---
+
+## 🔄 Fluxograma Completo
+
+```
+                    ┌─────────────────────┐
+                    │   INÍCIO (main)     │
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │  check_args()       │
+                    │  - Valida argc      │
+                    │  - Valida números   │
+                    │  - Verifica limites │
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │  init_table()       │
+                    │  - Parse argumentos │
+                    │  - Init variáveis   │
+                    │  - Setup filósofos  │
+                    │  - Init mutexes     │
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │ start_simulation()  │
+                    │                     │
+                    │  for each philo:    │
+                    │    pthread_create() │
+                    └──────────┬──────────┘
+                               │
+                ┌──────────────┼──────────────┐
+                │              │              │
+       ┌────────▼────────┐     │     ┌───────▼────────┐
+       │ Thread Philo 1  │     │     │ Thread Philo N │
+       │                 │     │     │                │
+       │ philosophing()  │    ...    │ philosophing() │
+       └────────┬────────┘     │     └───────┬────────┘
+                │              │             │
+                │      ┌───────▼──────┐      │
+                │      │  MAIN THREAD │      │
+                │      │              │      │
+                │      │ philos_      │      │
+                │      │ monitor()    │      │
+                │      │              │      │
+                │      │ Loop:        │      │
+                │      │ - Check morte│      │
+                │      │ - Check full │      │
+                │      └───────┬──────┘      │
+                │              │             │
+                └──────────────┼─────────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │  join_threads()     │
+                    │                     │
+                    │  for each philo:    │
+                    │    pthread_join()   │
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │  destroy_mutex()    │
+                    │  - Destroy forks    │
+                    │  - Destroy sync     │
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │   FIM (return 0)    │
+                    └─────────────────────┘
+```
+
+### Fluxo de Cada Thread (philosophing)
+
+```
+┌─────────────────────────────────────┐
+│      philosophing(philo)            │
+└──────────────┬──────────────────────┘
+               │
+        ┌──────▼──────┐
+        │ n_philos==1?│
+        └──┬────────┬─┘
+     YES   │        │ NO
+           │        │
+    ┌──────▼────┐   │
+    │ ft_one_   │   │
+    │ philo()   │   │
+    └──────┬────┘   │
+           │        │
+        return   ┌──▼─────────┐
+                 │initial_    │
+                 │delay()     │
+                 └──┬─────────┘
+                    │
+        ┌───────────▼───────────┐
+        │ while (!simulation_   │
+        │       ended())        │
+        └───────────┬───────────┘
+                    │
+         ┌──────────▼──────────┐
+         │   take_forks()      │
+         │   ┌─────────────┐   │
+         │   │ Par: R → L  │   │
+         │   │ Ímpar: L → R│   │
+         │   └─────────────┘   │
+         └──────────┬──────────┘
+                    │
+         ┌──────────▼──────────┐
+         │      eat()          │
+         │  ┌──────────────┐   │
+         │  │ meal_nbr++   │   │
+         │  │ last_meal=now│   │
+         │  │ sleep(t_2eat)│   │
+         │  │ unlock forks │   │
+         │  └──────────────┘   │
+         └──────────┬──────────┘
+                    │
+         ┌──────────▼──────────┐
+         │ sleep_and_think()   │
+         │  ┌──────────────┐   │
+         │  │ is sleeping  │   │
+         │  │ sleep(t_2sleep)│  │
+         │  │ is thinking  │   │
+         │  └──────────────┘   │
+         └──────────┬──────────┘
+                    │
+                    └──────┐
+                           │
+                      ┌────▼────┐
+                      │ Loop de │
+                      │ volta   │
+                      └─────────┘
+```
+
+---
+
+## 🧪 Testes e Debugging
+
+### Testes Básicos
+
+```bash
+# 1. Ninguém morre
+./philosophers 5 800 200 200
+# Deve rodar indefinidamente
+
+# 2. Morte previsível
+./philosophers 4 310 200 100
+# Alguém deve morrer em ~310ms
+
+# 3. Número de refeições
+./philosophers 5 800 200 200 7
+# Output: "Every Philosopher has eaten 7 times"
+
+# 4. Um filósofo
+./philosophers 1 800 200 200
+# Output: 
+# 0 [1] has taken a fork
+# 800 [1] died
+
+# 5. Muitos filósofos
+./philosophers 200 800 200 200
+# Deve funcionar sem travar
+```
+
+### Ferramentas de Debug
+
+#### Valgrind - Memory Leaks
+```bash
+valgrind --leak-check=full ./philosophers 5 800 200 200 7
+```
+**Esperado**: `All heap blocks were freed -- no leaks are possible`
+
+#### Helgrind - Data Races
+```bash
+valgrind --tool=helgrind ./philosophers 5 800 200 200
+```
+**Buscar**: "Possible data race", "lock order"
+
+#### GDB - Debugging
+```bash
+gcc -g -pthread srcs/*.c -I./inc -o philo_debug
+gdb ./philo_debug
+
+(gdb) run 5 800 200 200
+(gdb) bt          # Backtrace se crashar
+(gdb) print var   # Inspecionar variáveis
+```
+
+---
+
+## ⚠️ Problemas Comuns e Soluções
+
+### 1. Deadlock (Tudo Trava)
+
+**Sintoma**: Programa para de responder
+
+**Causas**:
+- Ordem inconsistente de locks
+- Esquecer de fazer unlock
+
+**Solução**:
+```c
+// ✅ CORRETO: Ordem diferente
+if (id % 2 == 0)
+    lock(R) → lock(L)
+else
+    lock(L) → lock(R)
+```
+
+### 2. Data Race
+
+**Sintoma**: Helgrind reporta "conflicting access"
+
+**Causas**:
+- Acessar `last_meal` sem mutex
+- Ler/escrever flags sem proteção
+
+**Solução**:
+```c
+// ✅ SEMPRE usar mutex
+pthread_mutex_lock(&sync);
 philo->last_meal = ft_time_ms();
-pthread_mutex_unlock(&vars->sync);
+pthread_mutex_unlock(&sync);
 ```
 
 ### 3. Mensagens Após Morte
 
-**Problema**: Filósofo imprime "is eating" depois de outro morrer
+**Sintoma**: Output mostra "is eating" depois de "died"
 
-**Solução**: Verificar `philo_dead` antes de imprimir
+**Causa**: Não verificar `philo_dead` antes de imprimir
+
+**Solução**:
 ```c
-bool ft_checker_message(t_data *philo, char *str)
-{
-    pthread_mutex_lock(&philo->vars->sync);
-    if (philo->vars->philo_dead || philo->vars->philos_full)
-    {
-        pthread_mutex_unlock(&philo->vars->sync);
-        return (false);  // Não imprime
-    }
-    printf("%lu %d %s\n", timestamp, id, str);
-    pthread_mutex_unlock(&philo->vars->sync);
-    return (true);
-}
+// ✅ Verificar estado
+if (philo_dead || philos_full)
+    return (false);  // Não imprime
 ```
 
-### 4. Mutexes Não Liberados
+### 4. Morte Não Detectada
 
-**Problema**: Lock sem unlock → deadlock permanente
+**Sintoma**: Filósofo deveria morrer mas não morre
 
-**Solução**: Sempre fazer unlock em todos os caminhos
+**Causas**:
+- `last_meal` não atualizado
+- Monitor com delay muito grande
+
+**Solução**:
 ```c
-pthread_mutex_lock(r_fork);
-if (error_condition)
-{
-    pthread_mutex_unlock(r_fork);  // ✅ Libera antes de retornar
-    return (false);
-}
-pthread_mutex_lock(l_fork);
-// ... usar garfos ...
-pthread_mutex_unlock(l_fork);
-pthread_mutex_unlock(r_fork);
+// ✅ Atualizar last_meal ANTES de comer
+pthread_mutex_lock(&sync);
+philo->last_meal = ft_time_ms();
+pthread_mutex_unlock(&sync);
 ```
 
 ---
 
-## 🧪 Testes Importantes
+## 📖 Recursos e Referências
 
-### Teste 1: Ninguém deve morrer
-```bash
-./philo 5 800 200 200
-```
-- 5 filósofos
-- 800ms para morrer
-- 200ms para comer
-- 200ms para dormir
+### Documentação POSIX Threads
+- `man pthread_create`
+- `man pthread_join`
+- `man pthread_mutex_lock`
+- `man pthread_mutex_unlock`
+- `man gettimeofday`
 
-**Resultado esperado**: Loop infinito, ninguém morre
+### Artigos e Tutoriais
+- [Dining Philosophers Problem - Wikipedia](https://en.wikipedia.org/wiki/Dining_philosophers_problem)
+- [POSIX Threads Programming](https://computing.llnl.gov/tutorials/pthreads/)
+- [Deadlock Prevention](https://www.geeksforgeeks.org/deadlock-prevention/)
 
-### Teste 2: Filósofo deve morrer
-```bash
-./philo 4 310 200 100
-```
-- 4 filósofos
-- 310ms para morrer
-- 200ms para comer
-- 100ms para dormir
-
-**Resultado esperado**: Um filósofo morre após ~310ms
-
-### Teste 3: Todos comem X vezes
-```bash
-./philo 5 800 200 200 7
-```
-- 5 filósofos
-- Cada um deve comer 7 vezes
-
-**Resultado esperado**: "Every philosopher has eaten 7 times"
-
-### Teste 4: Um filósofo só
-```bash
-./philo 1 800 200 200
-```
-**Resultado esperado**: 
-```
-0 1 has taken a fork
-800 1 died
-```
-
-### Teste 5: Estresse (muitos filósofos)
-```bash
-./philo 200 800 200 200
-```
-**Resultado esperado**: Funciona sem crash
+### Livros Recomendados
+- **"Operating System Concepts"** - Silberschatz, Galvin, Gagne
+- **"Modern Operating Systems"** - Andrew S. Tanenbaum
+- **"Programming with POSIX Threads"** - David R. Butenhof
 
 ---
 
-## 📊 Timing e Precisão
+## 👤 Autor
 
-### `ft_usleep()` Inteligente
-```c
-void ft_usleep(uint64_t time, t_data *philo_x)
-{
-    uint64_t now = ft_time_ms();
-    
-    while (ft_time_ms() - now < time && !someone_dead(philo_x))
-    {
-        usleep(150);  // Sleep curto, verifica frequentemente
-    }
-}
-```
-
-**Por que não `usleep(time * 1000)`?**
-- Precisamos verificar `someone_dead` frequentemente
-- `usleep()` pode dormir mais que o pedido
-- Loop com sleeps curtos = mais responsivo
+**ggomes-v**  
+42 Porto - 2025
 
 ---
 
-## 🎯 Checklist Final
+## 📄 Licença
 
-### Funcionalidades
-- [ ] Parsing de argumentos correto
-- [ ] Validação de limites (1-200 philos, times > 60ms)
-- [ ] Inicialização de mutexes
-- [ ] Criação de threads
-- [ ] Loop de monitoramento
-- [ ] Detecção de morte (within 10ms)
-- [ ] Detecção de conclusão (todos comeram N vezes)
-- [ ] Caso especial: 1 filósofo
-- [ ] Destruição de mutexes
-- [ ] Sem memory leaks
-
-### Sincronização
-- [ ] Sem data races
-- [ ] Sem deadlocks
-- [ ] Ordem correta de locks (par/ímpar diferente)
-- [ ] Mensagens não impressas após morte
-- [ ] `last_meal` atualizado com mutex
-
-### Edge Cases
-- [ ] 1 filósofo funciona
-- [ ] 200 filósofos funciona
-- [ ] Tempos muito curtos (60ms)
-- [ ] max_rounds = 1
-- [ ] max_rounds = -1 (infinito)
+Este projeto é desenvolvido como parte do currículo da 42 School.
 
 ---
 
-## 🔧 Compilação e Execução
+<div align="center">
 
-### Compilar
-```bash
-cc -Wall -Wextra -Werror -pthread *.c -o philo
-```
+**⭐ Se este projeto te ajudou, considera dar uma estrela! ⭐**
 
-### Executar
-```bash
-./philo <n_philos> <t_die> <t_eat> <t_sleep> [max_meals]
-```
+Made with 💜 and lots of ☕
 
-### Exemplos
-```bash
-# Deve rodar indefinidamente
-./philo 5 800 200 200
-
-# Um deve morrer
-./philo 4 310 200 100
-
-# Todos comem 7 vezes
-./philo 5 800 200 200 7
-```
-
----
-
-## 📝 Resumo das Correções Feitas
-
-### `init.c`
-✅ **Antes**: Só inicializava `philosophers[0].last_meal`  
-✅ **Depois**: Loop inicializa TODOS os filósofos
-
-### `philo.c`
-✅ **Antes**: Loop de monitoramento confuso com `i = i + 0`  
-✅ **Depois**: Loop claro com reset manual `if (i >= n) i = 0`
-
-### `philosophing.c`
-✅ **Antes**: Verificações após locks (perigoso)  
-✅ **Depois**: Verificações antes de tentar pegar garfos
-
-✅ **Antes**: Unlocks incompletos em caso de erro  
-✅ **Depois**: Sempre libera todos os mutexes adquiridos
-
-### `utils_philo.c`
-✅ **Antes**: `ft_one_philo` só imprimia, não esperava  
-✅ **Depois**: Espera `t_2die` antes de terminar
-
----
-
-## 🎓 Conceitos Aprendidos
-
-1. **Threads**: Execução paralela de código
-2. **Mutexes**: Proteção de recursos compartilhados
-3. **Deadlock**: Como evitar com ordenação consistente
-4. **Data Races**: Importância de locks em acessos compartilhados
-5. **Atomicidade**: Operações que não podem ser interrompidas
-6. **Critical Sections**: Trechos de código que devem ser protegidos
-
----
-
-## 💡 Dicas Extras
-
-### Debug com prints
-```c
-printf("[DEBUG] Philo %d: trying to lock r_fork\n", id);
-pthread_mutex_lock(r_fork);
-printf("[DEBUG] Philo %d: r_fork locked\n", id);
-```
-
-### Valgrind para data races
-```bash
-valgrind --tool=helgrind ./philo 5 800 200 200
-```
-
-### Verificar leaks
-```bash
-valgrind --leak-check=full ./philo 5 800 200 200 7
-```
-
-### Teste de longa duração
-```bash
-./philo 5 800 200 200 &
-PID=$!
-sleep 60  # Roda por 1 minuto
-kill $PID
-```
-
----
-
-## 🏆 Conclusão
-
-O projeto Philosophers é uma excelente introdução a:
-- Programação concorrente
-- Sincronização de threads
-- Problemas clássicos de concorrência
-- Debugging de race conditions
-
-Agora você tem uma implementação completa e corrigida! 🎉
+</div>
