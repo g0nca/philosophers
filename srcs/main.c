@@ -6,16 +6,15 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 11:57:21 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/29 11:21:39 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/29 12:08:28 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/philosophers.h"
 
-static void    destroy_mutex(t_table *table);
-static void    join_threads(t_table *table);
+static void     destroy_mutex(t_table *table);
+static void     join_threads(t_table *table);
 static void     start_simulation(t_table *table);
-void    philos_monitor(t_table *table);
 
 //philosophers 8 800 100 100 [5]
 // n_philos | t_2die | t_2eat | t_2sleep | number_of_time_each_philo_must_eat (Optional Argument)

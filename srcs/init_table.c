@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 14:51:06 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/29 11:22:07 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/29 12:10:15 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ static void philos_start(t_table *table)
         table->philo[i].philo_nbr = i + 1;
         table->philo[i].last_meal = table->start_time;
         table->philo[i].table = table;
+        table->philo[i].meal_nbr = 0;
         pthread_mutex_init(&table->philo[i].l_fork, NULL);
         if (i + 1 == table->n_philos)
             table->philo[i].r_fork = &table->philo[0].l_fork;

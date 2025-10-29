@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 11:21:13 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/29 11:21:30 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/29 11:43:12 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,6 @@ void    philos_monitor(t_table *table)
             pthread_mutex_unlock(&table->sync);
             x++;
         }
-        usleep(1000);
+        usleep(500);
     }
 }

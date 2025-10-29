@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 11:34:35 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/29 10:00:23 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/29 12:32:24 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,6 +119,7 @@ static bool	eat(t_philo *philo)
 		pthread_mutex_unlock(&philo->l_fork);
 		pthread_mutex_unlock(philo->r_fork);
 		return (false);
+	
 	}
 	ft_usleep_check(philo->table->t_2eat, philo);
 	if (philo->table->max_rounds != -1)
