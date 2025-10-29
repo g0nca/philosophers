@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 11:21:13 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/29 11:43:12 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/29 14:01:32 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ void    philos_monitor(t_table *table)
             if (ft_time_ms() - table->philo[x].last_meal > (uint64_t)table->t_2die)
             {
                 table->philo_dead = true;
-                printf("%lu [%d] died\n", ft_time_ms() - table->start_time, table->philo[x].philo_nbr);
+                printf(BOLD UNDERLINE BRIGHT_BLUE "%lu"RESET BOLD" [%d]" BOLD MAGENTA" died\n"RESET, ft_time_ms() - table->start_time, table->philo[x].philo_nbr);
                 end_simulation = true;
                 pthread_mutex_unlock(&table->sync);
                 break ;
@@ -35,7 +35,7 @@ void    philos_monitor(t_table *table)
             if (table->max_rounds != -1 && table->how_many_r_full >= table->n_philos)
             {
                 table->philos_full = true;
-                printf("Every Philosopher has eaten %d times\n", table->max_rounds);
+                printf(BOLD BRIGHT_CYAN "Every Philosopher has eaten %d times\n" RESET, table->max_rounds);
                 end_simulation = true;
                 pthread_mutex_unlock(&table->sync);
                 break ;

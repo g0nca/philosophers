@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 11:34:35 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/29 12:34:00 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/29 13:08:26 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ static bool take_right_then_left(t_philo *philo)
     if (simulation_ended(philo))
         return (false);
     pthread_mutex_lock(philo->r_fork);
-    if (!ft_message(philo, "has taken a fork"))
+    if (!ft_message(philo, BOLD GREEN "has taken a fork" RESET))
     {
         pthread_mutex_unlock(philo->r_fork);
         return (false);
@@ -68,7 +68,7 @@ static bool take_right_then_left(t_philo *philo)
         return (false);
     }
     pthread_mutex_lock(&philo->l_fork);
-    if (!ft_message(philo, "has taken a fork"))
+    if (!ft_message(philo, BOLD GREEN "has taken a fork" RESET))
     {
         pthread_mutex_unlock(&philo->l_fork);
         pthread_mutex_unlock(philo->r_fork);
@@ -82,7 +82,7 @@ static bool	take_left_then_right(t_philo *philo)
 	if (simulation_ended(philo))
 		return (false);
 	pthread_mutex_lock(&philo->l_fork);
-	if (!ft_message(philo, "has taken a fork"))
+	if (!ft_message(philo, BOLD GREEN "has taken a fork" RESET))
 	{
 		pthread_mutex_unlock(&philo->l_fork);
 		return (false);
@@ -93,7 +93,7 @@ static bool	take_left_then_right(t_philo *philo)
 		return (false);
 	}
 	pthread_mutex_lock(philo->r_fork);
-	if (!ft_message(philo, "has taken a fork"))
+	if (!ft_message(philo, BOLD GREEN "has taken a fork" RESET))
 	{
 		pthread_mutex_unlock(philo->r_fork);
 		pthread_mutex_unlock(&philo->l_fork);
@@ -109,18 +109,17 @@ static bool	eat(t_philo *philo)
 		pthread_mutex_unlock(&philo->l_fork);
 		pthread_mutex_unlock(philo->r_fork);
 		return (false);
-	}
+	}	
 	pthread_mutex_lock(&philo->table->sync);
 	philo->meal_nbr++;
 	philo->last_meal = ft_time_ms();
 	pthread_mutex_unlock(&philo->table->sync);
-	if (!ft_message(philo, "is eating"))
+	if (!ft_message(philo, BOLD RED "is eating" RESET))
 	{
 		pthread_mutex_unlock(&philo->l_fork);
 		pthread_mutex_unlock(philo->r_fork);
 		return (false);
 	}
-	ft_usleep_check(philo->table->t_2eat, philo);
 	if (philo->table->max_rounds != -1)
 	{
 		pthread_mutex_lock(&philo->table->sync);
@@ -128,16 +127,17 @@ static bool	eat(t_philo *philo)
 			philo->table->how_many_r_full++;
 		pthread_mutex_unlock(&philo->table->sync);
 	}
+	ft_usleep_check(philo->table->t_2eat, philo);
 	pthread_mutex_unlock(&philo->l_fork);
 	pthread_mutex_unlock(philo->r_fork);
 	return (true);
 }
 static bool	sleep_and_think(t_philo *philo)
 {
-	if (!ft_message(philo, "is sleeping"))
+	if (!ft_message(philo, BOLD BLUE "is sleeping" RESET))
 		return (false);
 	ft_usleep_check(philo->table->t_2sleep, philo);
-	if (!ft_message(philo, "is thinking"))
+	if (!ft_message(philo, BOLD BRIGHT_YELLOW "is thinking" RESET))
 		return (false);
 	return (true);
 }

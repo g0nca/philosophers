@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:36:11 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/29 11:24:53 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/29 13:55:49 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ bool    ft_message(t_philo *philo, const char *message)
 		pthread_mutex_unlock(&philo->table->sync);
 		return (false);
 	}
-    printf("%lu [%d] %s\n", ft_time_ms() - philo->table->start_time, philo->philo_nbr, message);
+    printf(BOLD UNDERLINE BRIGHT_BLUE "%lu"RESET BOLD WHITE" [%d] %s\n", ft_time_ms() - philo->table->start_time, philo->philo_nbr, message);
     pthread_mutex_unlock(&philo->table->sync);
 	return (true);
 }
