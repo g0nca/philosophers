@@ -6,7 +6,7 @@
 #    By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/09/26 11:42:21 by ggomes-v          #+#    #+#              #
-#    Updated: 2025/10/29 14:20:14 by ggomes-v         ###   ########.fr        #
+#    Updated: 2025/10/30 11:12:09 by ggomes-v         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,7 @@
 ## MAKE FILE BASICS ##
 ######################
 
-NAME        = philosophers
+NAME        = philo
 CC          = cc
 CFLAGS      = -Wall -Wextra -Werror
 OBJ_DIR     = obj
