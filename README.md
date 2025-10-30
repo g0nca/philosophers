@@ -16,7 +16,9 @@
 [Funções](#-documentação-de-funções)
 
 </div>
-![Explanation](https://g0nca.github.io/philosophers/)
+
+**Concepts**
+(https://g0nca.github.io/philosophers/)
 
 ---
 
