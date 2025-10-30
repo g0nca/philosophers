@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 14:51:06 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/30 09:46:03 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/30 11:10:33 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,8 +59,8 @@ static void	philos_start(t_table *table)
 static bool	check_limits(t_table *table)
 {
 	if (table->n_philos < 1 || table->n_philos > 200)
-		error_exit("Error\nNumber of 
-			philosophers must be between 1 and 200 !!!");
+		error_exit(
+			"Error\nNumber of philosophers must be between 1 and 200 !!!");
 	if ((table->t_2die < 60 || table->t_2eat < 60 || table->t_2sleep < 60)
 		|| (table->t_2die > INT_MAX || table->t_2eat > INT_MAX
 			|| table->t_2sleep > INT_MAX))
