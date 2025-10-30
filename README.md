@@ -6,7 +6,7 @@
 ![C](https://img.shields.io/badge/C-00599C?style=for-the-badge&logo=c&logoColor=white)
 ![Threads](https://img.shields.io/badge/Threads-FF6B6B?style=for-the-badge)
 ![Grade](https://img.shields.io/badge/Grade-100%2F100-success?style=for-the-badge)
-
+![Explanation](https://g0nca.github.io/philosophers/)
 **Solução completa para o problema clássico do jantar dos filósofos usando threads e mutexes**
 
 [Sobre](#-sobre-o-projeto) • 
