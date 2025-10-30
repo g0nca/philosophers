@@ -17,9 +17,6 @@
 
 </div>
 
-**Concepts**
-(https://g0nca.github.io/philosophers/)
-
 ---
 
 ## 📋 Sobre o Projeto
@@ -36,6 +33,10 @@ Criar uma simulação onde N filósofos sentam-se numa mesa circular, alternando
 - **Starvation**: Garantir que nenhum filósofo morra de fome
 - **Data Races**: Sincronizar corretamente o acesso a recursos compartilhados
 - **Performance**: Detectar mortes em menos de 10ms
+
+
+**Concepts**
+(https://g0nca.github.io/philosophers/)
 
 ---
 
