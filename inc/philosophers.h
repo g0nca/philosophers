@@ -6,7 +6,7 @@
 /*   By: ggomes-v <ggomes-v@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 11:58:47 by ggomes-v          #+#    #+#             */
-/*   Updated: 2025/10/29 12:58:55 by ggomes-v         ###   ########.fr       */
+/*   Updated: 2025/10/30 11:09:11 by ggomes-v         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,64 +77,48 @@
 # define BG_BRIGHT_CYAN    "\033[106m"
 # define BG_BRIGHT_WHITE   "\033[107m"
 
-/* ===================== 256 COLOR MODE (ADVANCED) ===================== */
-/* Example: "\033[38;5;196m" → Red, "\033[48;5;21m" → Blue background */
-
-# define COLOR_256(x)      "\033[38;5;"x"m"
-# define BG_COLOR_256(x)   "\033[48;5;"x"m"
-
-/* ===================== COMMON COMBINATIONS ===================== */
-# define SUCCESS_COLOR   "\033[1;32m"   /* bold green */
-# define WARNING_COLOR   "\033[1;33m"   /* bold yellow */
-# define ERROR_COLOR     "\033[1;31m"   /* bold red */
-# define INFO_COLOR      "\033[1;36m"   /* bold cyan */
-# define ACTION_COLOR    "\033[1;35m"   /* bold magenta */
-# define TIME_COLOR      "\033[90m"     /* gray */
-
 typedef struct s_philo
 {
-    int                 philo_nbr;
-    int                 meal_nbr;
-    uint64_t            last_meal;
-    pthread_t           thread;
-    pthread_mutex_t     l_fork;
-    pthread_mutex_t     *r_fork;
-    struct s_table       *table;
-}   t_philo;
+	int				philo_nbr;
+	int				meal_nbr;
+	uint64_t		last_meal;
+	pthread_t		thread;
+	pthread_mutex_t	l_fork;
+	pthread_mutex_t	*r_fork;
+	struct s_table	*table;
+}	t_philo;
 
 typedef struct s_table
 {
-    int             n_philos;
-    int             t_2eat;
-    int             t_2sleep;
-    int             t_2die;
-    int             max_rounds;
-    int             how_many_r_full;
-    bool            philo_dead;
-    bool            philos_full;
-    uint64_t        start_time;
-    pthread_mutex_t sync;
-    t_philo         philo[200];
-}   t_table;
-
-bool    init_table(int ac, char **av, t_table *table);
-
-
-void    *philosophing(void  *philo);
-
-bool     check_args(int ac, char **av, t_table *table);
-bool    check_args_nbrs(char **av);
-
-int	ft_atoi(const char *str);
+	int					n_philos;
+	int					t_2eat;
+	int					t_2sleep;
+	int					t_2die;
+	int					max_rounds;
+	int					how_many_r_full;
+	bool				philo_dead;
+	bool				philos_full;
+	bool				end_simulation;
+	uint64_t			start_time;
+	pthread_mutex_t		sync;
+	t_philo				philo[200];
+}	t_table;
+int			ft_atoi(const char *str);
 uint64_t	ft_time_ms(void);
-void	error_exit(const char *str);
-bool    ft_message(t_philo *philo, const char *message);
-void	ft_usleep_check(uint64_t ms, t_philo *philo);
+
+bool		init_table(int ac, char **av, t_table *table);
+bool		ft_message(t_philo *philo, const char *message);
 bool		simulation_ended(t_philo *philo);
+bool		sleep_and_think(t_philo *philo);
+bool		take_forks(t_philo *p);
+bool		check_args(int ac, char **av, t_table *table);
+bool		check_args_nbrs(char **av);
 
-void     initial_delay(t_philo *philo);
-void    *ft_one_philo(t_philo *philo);
-
-void            philos_monitor(t_table *table);
+void		error_exit(const char *str);
+void		ft_usleep_check(uint64_t ms, t_philo *philo);
+void		*philosophing(void *philo);
+void		initial_delay(t_philo *philo);
+void		*ft_one_philo(t_philo *philo);
+void		philos_monitor(t_table *table);
 
 #endif
