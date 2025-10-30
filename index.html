@@ -379,8 +379,8 @@
                     Um <strong>processo</strong> é um programa em execução. Cada processo tem:
                 </p>
                 <ul style="font-size: 1.1em; line-height: 2; margin-left: 40px;">
-                    <li>Seu próprio espaço de memória</li>
-                    <li>Seus próprios recursos (arquivos, sockets)</li>
+                    <li>O próprio espaço de memória</li>
+                    <li>Os próprios recursos (arquivos, sockets)</li>
                     <li>PID (Process ID) único</li>
                     <li>Isolamento total de outros processos</li>
                 </ul>
@@ -390,8 +390,8 @@
                 <div class="analogy-title">🏠 Analogia do Mundo Real</div>
                 <div class="analogy-text">
                     Um <strong>processo</strong> é como uma <strong>casa</strong>:
-                    <br>• Tem seus próprios quartos, cozinha, banheiro
-                    <br>• Totalmente isolada das casas vizinhas
+                    <br>• Tem os próprios quartos, cozinha, casa de banho
+                    <br>• Totalmente isolada das casas ao seu redor
                     <br>• Para comunicar com outra casa, precisa sair e tocar a campainha
                 </div>
             </div>
@@ -416,9 +416,9 @@
                 <div class="analogy-title">👥 Analogia do Mundo Real</div>
                 <div class="analogy-text">
                     Uma <strong>thread</strong> é como uma <strong>pessoa dentro da casa</strong>:
-                    <br>• Todas compartilham a mesma cozinha, sala, banheiro
+                    <br>• Todas compartilham a mesma cozinha, sala, casa de banho
                     <br>• Podem se comunicar facilmente
-                    <br>• Mas cada uma tem seu próprio quarto (stack)
+                    <br>• Mas cada uma tem o próprio quarto (stack)
                     <br>• <strong>PROBLEMA:</strong> Podem entrar em conflito (ex: duas pessoas querem usar a mesma panela)
                 </div>
             </div>
@@ -574,7 +574,6 @@
                     <strong>Esquecer o pthread_join():</strong>
                     <br>• O programa termina antes das threads executarem
                     <br>• As threads são destruídas prematuramente
-                    <br>• <strong>Foi exatamente o teu problema inicial!</strong>
                 </div>
             </div>
 
@@ -623,9 +622,9 @@
             </div>
 
             <div class="analogy-box">
-                <div class="analogy-title">🚻 Analogia: Banheiro Público</div>
+                <div class="analogy-title">🚻 Analogia: Casa de banho Pública</div>
                 <div class="analogy-text">
-                    Imagine um banheiro com apenas 1 cabine:
+                    Imagina uma casa de banho penas com 1 cabine:
                     <br><br>
                     <strong>Sem Mutex:</strong>
                     <br>• Várias pessoas tentam entrar ao mesmo tempo
